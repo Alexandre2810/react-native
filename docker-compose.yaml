@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  symfony:
+    build: app
+    container_name: symfony_docker_ws
+    ports:
+      - "8245:80"
+    volumes:
+      - ./app/vhost:/etc/apache2/sites-enabled
+      - ./backend/:/var/www/backend
+    restart: always
+    networks:
+      - dev
+
+  caddy:
+    image: dunglas/mercure
+    restart: unless-stopped
+    container_name: mercure_docker
+    environment:
+      # Uncomment the following line to disable HTTPS
+      SERVER_NAME: ':80'
+      MERCURE_PUBLISHER_JWT_KEY: '!ChangeMe!'
+      MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeMe!'
+      MERCURE_EXTRA_DIRECTIVES:
+        cors_origins "http://localhost:3000"
+        cors_origins "http://localhost:8245"
+    #                anonymous
+    # Uncomment the following line to enable the development mode
+    #        command: /usr/bin/caddy run -config /etc/caddy/Caddyfile.dev
+    ports:
+      - "8245:80"
+      - "443:443"
+    #        volumes:
+    #            - caddy_data:/data
+    #            - caddy_config:/config
+    networks:
+      - dev
+
+  db:
+    image: mariadb
+    container_name: mariadb_docker_ws
+    restart: always
+    volumes:
+      - db-data:/var/lib/mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    networks:
+      - dev
+
+networks:
+  dev:
+
+volumes:
+  db-data:
