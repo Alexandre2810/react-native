@@ -46,7 +46,11 @@ class Chat
 
     public function removeMessage(Message $message): self
     {
-        $this->messages->removeElement($message);
+        if($this->messages->removeElement($message)){
+            $message->setChat(null);
+        }
+
+        return $this;
     }
 
     public function getParticipants(): Collection
@@ -56,11 +60,20 @@ class Chat
 
     public function addParticipant(User $participant): self
     {
-        $this->participants->add($participant);
+        if (!$this->participants->contains($participant)){
+            $this->participants->add($participant);
+        }
+
+        return $this;
     }
 
-    public function removeParticipant(User $participant): self{
-        $this->participants->remove($participant);
+    public function removeParticipant(User $participant): self
+    {
+        if($this->participants->removeElement($participant)){
+            $participant->removeChat($this);
+        }
+
+        return $this;
     }
 
 }

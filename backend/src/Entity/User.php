@@ -37,6 +37,7 @@ class User
     public function __construct()
     {
         $this->messages = new ArrayCollection();
+        $this->chats = new ArrayCollection();
     }
 
     public function getId(): ?int
