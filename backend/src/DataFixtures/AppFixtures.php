@@ -1,0 +1,21 @@
+<?php
+
+namespace App\DataFixtures;
+
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Persistence\ObjectManager;
+use App\Factory\ChatFactory;
+use App\Factory\MessageFactory;
+use App\Factory\UserFactory;
+
+class AppFixtures extends Fixture
+{
+    public function load(ObjectManager $manager): void
+    {
+        UserFactory::createMany(10);
+        // $product = new Product();
+        // $manager->persist($product);
+
+        $manager->flush();
+    }
+}
