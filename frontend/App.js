@@ -1,28 +1,56 @@
 // In App.js in a new project
 
-import * as React from 'react';
-import { View, Text } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-function HomeScreen() {
-    return (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Text>Home Screens</Text>
-        </View>
-    );
+import Register from "./components/Register";
+import Login from "./components/Register";
+import { Provider } from 'react-redux';
+import store from "./store/index";
+
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+
+
+  
+
+function mainStack(){
+  return(
+    <Stack.Navigator
+      headerMode="none"
+      navigationOptions = {{
+        headerVisible: false,
+      }}
+    >
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="Register" component={Register} />
+    </Stack.Navigator>
+  )
 }
 
-const Stack = createNativeStackNavigator();
+function myTabs(){
+  return(
+    <Tab.Navigator>
+      <Tab.Screen name="Login" component={Login} />
+      <Tab.Screen name="Register" component={Register} />
+    </Tab.Navigator>
+  );
+}
 
-function App() {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator>
-                <Stack.Screen name="Home" component={HomeScreen} />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+const App = ()=>{
+  return(
+    
+<Provider store={store}>
+  <NavigationContainer>
+    {mainStack(), myTabs()}
+  </NavigationContainer>
+</Provider>
+  );
 }
 
 export default App;
