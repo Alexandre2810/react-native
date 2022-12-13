@@ -21,9 +21,6 @@ class IndexController extends AbstractController
         /** @var $user ?User */
         $user = $this->getUser();
 
-//        return $this->json([
-//            'users' => $userRepository->findAll()
-//        ], 200, [], ['groups' => 'usable']);
         return $this->json([
             'users' => $userRepository->findAllButMe($user)
         ], 200, []);

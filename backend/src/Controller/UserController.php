@@ -4,8 +4,8 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Security\JWTAuthenticator;
-use App\Service\CookieHelper;
-use App\Service\JWTHelper;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
@@ -22,16 +22,10 @@ class UserController extends AbstractController
      * @throws Exception
      */
     #[Route('/login', name: 'app_login')]
-    public function login(JWTHelper $JWTHelper): JsonResponse
+    public function login(CookieHelper $cookieHelper, JWTHelper $JWTHelper): JsonResponse
     {
         /** @var $user ?User */
         $user = $this->getUser();
-
-        if (null === $user) {
-            return $this->json([
-                'message' => 'missing credentials',
-            ], Response::HTTP_UNAUTHORIZED);
-        }
 
         return $this->json(
             [
@@ -40,6 +34,7 @@ class UserController extends AbstractController
                 'status'=> 200
             ],
             200,
+            ['set-cookie' => $cookieHelper->buildCookie($user)]
         );
     }
 
@@ -47,11 +42,7 @@ class UserController extends AbstractController
      * @throws Exception
      */
     #[Route('/register', name: 'app_register', methods: 'POST')]
-    public function register(Request                        $request,
-                             EntityManagerInterface         $entityManager,
-                             UserPasswordHasherInterface    $hasher,
-                             UserAuthenticatorInterface     $authenticator,
-                             JWTAuthenticator               $JWTAuthenticator,): JsonResponse
+    public function register(Request $request,EntityManagerInterface $entityManager,UserPasswordHasherInterface $hasher,UserAuthenticatorInterface $authenticator,JWTAuthenticator $JWTAuthenticator,): JsonResponse
     {
         if (!empty($request->request->get('password'))) {
             $user = new User();
@@ -70,7 +61,6 @@ class UserController extends AbstractController
             return $this->json(
                 [
                     'message' => 'Inscription réussie, bonjour ' . $user->getUsername() . '!',
-                    'jwt' => $JWTHelper->createJWT($user),
                     'status'=> 200
                 ],
                 200,

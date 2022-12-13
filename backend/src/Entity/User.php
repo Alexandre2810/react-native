@@ -16,16 +16,18 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['main'])]
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
     #[ORM\Column(type: 'json')]
-    #[Groups(['usable'])]
+    #[Groups(['main'])]
     private array $roles = [];
 
     #[ORM\OneToMany(mappedBy: 'auteur', targetEntity: Message::class, orphanRemoval: true)]

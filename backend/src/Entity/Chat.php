@@ -6,6 +6,7 @@ use App\Repository\ChatRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 
 #[ORM\Entity(repositoryClass: ChatRepository::class)]
@@ -20,7 +21,12 @@ class Chat
     private Collection $messages;
 
     #[ORM\ManyToMany(mappedBy: 'chats', targetEntity: Chat::class)]
+    #[Groups(['main'])]
     private Collection $participants;
+
+    #[ORM\Column(length: 255)]
+    #[Groups(['main'])]
+    private ?string $topic = null;
 
     public function __construct()
     {
@@ -72,6 +78,18 @@ class Chat
         if($this->participants->removeElement($participant)){
             $participant->removeChat($this);
         }
+
+        return $this;
+    }
+
+    public function getTopic(): ?string
+    {
+        return $this->topic;
+    }
+
+    public function setTopic(string $topic): self
+    {
+        $this->topic = $topic;
 
         return $this;
     }
