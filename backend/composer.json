@@ -19,7 +19,10 @@
         "symfony/mercure": "^0.6.2",
         "symfony/mercure-bundle": "^0.3.5",
         "symfony/runtime": "^6.2",
-        "symfony/yaml": "6.2.*"
+        "symfony/twig-bundle": "6.2.*",
+        "symfony/yaml": "6.2.*",
+        "twig/extra-bundle": "^2.12|^3.0",
+        "twig/twig": "^2.12|^3.0"
     },
     "config": {
         "allow-plugins": {
