@@ -4,9 +4,10 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Security\JWTAuthenticator;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+use App\Service\CookieHelper;
+use App\Service\JWTHelper;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,6 +28,12 @@ class UserController extends AbstractController
         /** @var $user ?User */
         $user = $this->getUser();
 
+        if (null === $user) {
+            return $this->json([
+                'message' => 'missing credentials',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
         return $this->json(
             [
                 'message' => 'Connexion réussie, bonjour ' . $user->getUsername() . '!',
@@ -38,13 +45,9 @@ class UserController extends AbstractController
         );
     }
 
-    /**
-     * @throws Exception
-     */
     #[Route('/register', name: 'app_register', methods: 'POST')]
-    public function register(Request $request,EntityManagerInterface $entityManager,UserPasswordHasherInterface $hasher,UserAuthenticatorInterface $authenticator,JWTAuthenticator $JWTAuthenticator,): JsonResponse
+    public function register(Request $request,EntityManagerInterface $entityManager,UserPasswordHasherInterface $hasher,UserAuthenticatorInterface $authenticator,JWTAuthenticator $JWTAuthenticator,CookieHelper $cookieHelper,JWTHelper $JWTHelper): JsonResponse
     {
-        if (!empty($request->request->get('password'))) {
             $user = new User();
             $user->setUsername($request->request->get('username'))
                 ->setPassword($hasher->hashPassword($user, $request->request->get('password')));
@@ -61,10 +64,11 @@ class UserController extends AbstractController
             return $this->json(
                 [
                     'message' => 'Inscription réussie, bonjour ' . $user->getUsername() . '!',
+                    'jwt' => $JWTHelper->createJWT($user),
                     'status'=> 200
                 ],
                 200,
+                ['set-cookie' => $cookieHelper->buildCookie($user)]
             );
-        }
     }
 }

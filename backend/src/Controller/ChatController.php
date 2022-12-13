@@ -6,9 +6,10 @@ use App\Entity\Chat;
 use App\Entity\User;
 use App\Entity\Message;
 use App\Repository\ChatRepository;
-use App\Service\PrivateChatHelper;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,14 +35,14 @@ class ChatController extends AbstractController
 
     #[Route('/chat/{topic}', name: 'app_chat_messages', methods: 'GET')]
     #[IsGranted('ROLE_USER')]
-    public function getChatMessages(ChatRepository $chatRepository): JsonResponse
+    public function getChatMessages(ChatRepository $chatRepository, string $topic): JsonResponse
     {
         /** @var $user User */
         $user = $this->getUser();
 
         return $this->json([
-            'chat' => $chatRepository->getAllMessagesOrderByDate()
-        ],200, []);
+            'chat' => $chatRepository->getAllMessagesOrderByDate($topic)
+        ],200, [], ['groups' => ['main']]);
     }
 
     /**
@@ -52,25 +53,39 @@ class ChatController extends AbstractController
      */
     #[Route('/chat/persist-message', name: 'app_chat_persist_message', methods: 'POST')]
     #[IsGranted('ROLE_USER')]
-    public function persistMessage(Request $request,ChatRepository $chatRepository,EntityManagerInterface $entityManager,): JsonResponse
+    public function persistMessage(Request $request,ChatRepository $chatRepository,EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var $user User */
         $user = $this->getUser();
+        $chat = $chatRepository->findOneBy(['topic' => $request->request->get('topic')]);
 
-        $message = new Message();
-        $message->setAuthor($user)
-            ->setChat($chat)
-            ->setCreatedAt(new \DateTime())
-            ->setContent($request->request->get('content'));
+        if (!$chat) {
+            $chat = new Chat();
+            $chat->setTopic($request->request->get('topic'));
+            $chat->setCreatedAt(new \DateTime());
+            $entityManager->persist($chat);
+        }
 
-        $entityManager->persist($message);
-        $entityManager->flush();
+        try {
+            $message = new Message();
+            $message->setAuthor($user)
+                ->setChat($chat)
+                ->setCreatedAt(new \DateTime())
+                ->setContent($request->request->get('content'));
 
-        return $this->json([
-            'status' => 1,
-        ], Response::HTTP_CREATED);
+            $entityManager->persist($message);
+            $entityManager->flush();
+
+            return $this->json([
+                'status' => 1,
+            ], Response::HTTP_CREATED);
+        } catch (Exception $exception) {
+            return $this->json([
+                'status' => 0,
+                'error' => $exception->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
-
 
     /**
      * @param User $otheruser
